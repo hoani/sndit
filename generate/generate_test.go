@@ -25,6 +25,8 @@ package sfx_play
 
 import (
 	_ "embed"
+	"fmt"
+
 	"github.com/hoani/sndit"
 )
 
@@ -43,10 +45,15 @@ const (
 
 var engine *sndit.SfxEngine[Sound]
 
-func Init(ctx sndit.Context) {
+func Init(ctx sndit.Context) error {
 	engine = sndit.NewSfx[Sound](ctx)
-	engine.Register(Die, die_wav)
-	engine.Register(Move, move_wav)
+	if err := engine.Register(Die, die_wav); err != nil {
+		return fmt.Errorf("registering Die: %w", err)
+	}
+	if err := engine.Register(Move, move_wav); err != nil {
+		return fmt.Errorf("registering Move: %w", err)
+	}
+	return nil
 }
 
 func Play(id Sound) {
@@ -74,6 +81,8 @@ package mus_theme
 
 import (
 	_ "embed"
+	"fmt"
+
 	"github.com/hoani/sndit"
 )
 
@@ -92,10 +101,15 @@ const (
 
 var engine *sndit.MusicEngine[Sound]
 
-func Init(ctx sndit.Context) {
+func Init(ctx sndit.Context) error {
 	engine = sndit.NewMusic[Sound](ctx)
-	engine.Register(Gameplay, gameplay_wav)
-	engine.Register(Title, title_wav)
+	if err := engine.Register(Gameplay, gameplay_wav); err != nil {
+		return fmt.Errorf("registering Gameplay: %w", err)
+	}
+	if err := engine.Register(Title, title_wav); err != nil {
+		return fmt.Errorf("registering Title: %w", err)
+	}
+	return nil
 }
 
 func Play(id Sound) {
@@ -171,6 +185,8 @@ package sfx_play
 
 import (
 	_ "embed"
+	"fmt"
+
 	"github.com/hoani/sndit"
 )
 
@@ -185,9 +201,12 @@ const (
 
 var engine *sndit.SfxEngine[Sound]
 
-func Init(ctx sndit.Context) {
+func Init(ctx sndit.Context) error {
 	engine = sndit.NewSfx[Sound](ctx)
-	engine.Register(Click, click_wav)
+	if err := engine.Register(Click, click_wav); err != nil {
+		return fmt.Errorf("registering Click: %w", err)
+	}
+	return nil
 }
 
 func Play(id Sound) {

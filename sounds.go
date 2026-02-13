@@ -1,5 +1,7 @@
 package sndit
 
+import "fmt"
+
 // Player controls playback of a single audio source.
 type Player interface {
 	Play()
@@ -30,12 +32,16 @@ func NewSfx[S ~int](ctx Context) *SfxEngine[S] {
 }
 
 // Register creates a player for the given sound ID from raw WAV data.
-func (e *SfxEngine[S]) Register(id S, data []byte) {
+func (e *SfxEngine[S]) Register(id S, data []byte) error {
+	if _, ok := e.players[id]; ok {
+		return fmt.Errorf("sound %d already registered", id)
+	}
 	p, err := e.ctx.NewPlayer(data)
 	if err != nil {
-		return
+		return err
 	}
 	e.players[id] = p
+	return nil
 }
 
 // Play plays the sound effect with the given ID, restarting if already playing.
@@ -69,12 +75,16 @@ func NewMusic[S ~int](ctx Context) *MusicEngine[S] {
 }
 
 // Register creates a looping player for the given sound ID from raw WAV data.
-func (e *MusicEngine[S]) Register(id S, data []byte) {
+func (e *MusicEngine[S]) Register(id S, data []byte) error {
+	if _, ok := e.players[id]; ok {
+		return fmt.Errorf("sound %d already registered", id)
+	}
 	p, err := e.ctx.NewLoopPlayer(data)
 	if err != nil {
-		return
+		return err
 	}
 	e.players[id] = p
+	return nil
 }
 
 // Play starts the music track with the given ID, stopping any current track.

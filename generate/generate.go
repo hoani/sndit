@@ -34,6 +34,8 @@ package {{.Package}}
 
 import (
 	_ "embed"
+	"fmt"
+
 	"github.com/hoani/sndit"
 )
 
@@ -54,11 +56,14 @@ const (
 
 var engine *sndit.SfxEngine[Sound]
 
-func Init(ctx sndit.Context) {
+func Init(ctx sndit.Context) error {
 	engine = sndit.NewSfx[Sound](ctx)
 {{- range .Sounds}}
-	engine.Register({{.ConstName}}, {{.VarName}})
+	if err := engine.Register({{.ConstName}}, {{.VarName}}); err != nil {
+		return fmt.Errorf("registering {{.ConstName}}: %w", err)
+	}
 {{- end}}
+	return nil
 }
 
 func Play(id Sound) {
@@ -71,6 +76,8 @@ package {{.Package}}
 
 import (
 	_ "embed"
+	"fmt"
+
 	"github.com/hoani/sndit"
 )
 
@@ -91,11 +98,14 @@ const (
 
 var engine *sndit.MusicEngine[Sound]
 
-func Init(ctx sndit.Context) {
+func Init(ctx sndit.Context) error {
 	engine = sndit.NewMusic[Sound](ctx)
 {{- range .Sounds}}
-	engine.Register({{.ConstName}}, {{.VarName}})
+	if err := engine.Register({{.ConstName}}, {{.VarName}}); err != nil {
+		return fmt.Errorf("registering {{.ConstName}}: %w", err)
+	}
 {{- end}}
+	return nil
 }
 
 func Play(id Sound) {

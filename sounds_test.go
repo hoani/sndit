@@ -51,8 +51,8 @@ const (
 func TestSfxEngine_Play(t *testing.T) {
 	ctx := &mockContext{}
 	engine := NewSfx[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
-	engine.Register(soundB, []byte("fake"))
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
+	require.NoError(t, engine.Register(soundB, []byte("fake")))
 
 	engine.Play(soundA)
 
@@ -64,7 +64,7 @@ func TestSfxEngine_Play(t *testing.T) {
 func TestSfxEngine_PlayRestartsWhilePlaying(t *testing.T) {
 	ctx := &mockContext{}
 	engine := NewSfx[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
 
 	engine.Play(soundA)
 	engine.Play(soundA) // should restart
@@ -86,7 +86,7 @@ func TestSfxEngine_PlayUnregisteredIsNoop(t *testing.T) {
 func TestMusicEngine_Play(t *testing.T) {
 	ctx := &mockContext{}
 	engine := NewMusic[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
 
 	engine.Play(soundA)
 
@@ -97,8 +97,8 @@ func TestMusicEngine_Play(t *testing.T) {
 func TestMusicEngine_PlaySwitchesTracks(t *testing.T) {
 	ctx := &mockContext{}
 	engine := NewMusic[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
-	engine.Register(soundB, []byte("fake"))
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
+	require.NoError(t, engine.Register(soundB, []byte("fake")))
 
 	engine.Play(soundA)
 	engine.Play(soundB)
@@ -112,7 +112,7 @@ func TestMusicEngine_PlaySwitchesTracks(t *testing.T) {
 func TestMusicEngine_PlaySameTrackIsNoop(t *testing.T) {
 	ctx := &mockContext{}
 	engine := NewMusic[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
 
 	engine.Play(soundA)
 	engine.Play(soundA) // should not restart
@@ -124,7 +124,7 @@ func TestMusicEngine_PlaySameTrackIsNoop(t *testing.T) {
 func TestMusicEngine_Stop(t *testing.T) {
 	ctx := &mockContext{}
 	engine := NewMusic[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
 
 	engine.Play(soundA)
 	engine.Stop()
@@ -142,24 +142,30 @@ func TestMusicEngine_StopWhenNotPlayingIsNoop(t *testing.T) {
 	engine.Stop()
 }
 
-func TestSfxEngine_RegisterError(t *testing.T) {
+func TestSfxEngine_RegisterReturnsContextError(t *testing.T) {
 	ctx := &mockContext{err: errors.New("bad data")}
 	engine := NewSfx[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
-
-	// Player was not registered, so Play is a noop.
-	engine.Play(soundA)
-	require.Empty(t, ctx.players)
+	require.Error(t, engine.Register(soundA, []byte("fake")))
 }
 
-func TestMusicEngine_RegisterError(t *testing.T) {
+func TestSfxEngine_RegisterDuplicateReturnsError(t *testing.T) {
+	ctx := &mockContext{}
+	engine := NewSfx[testSound](ctx)
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
+	require.Error(t, engine.Register(soundA, []byte("fake")))
+}
+
+func TestMusicEngine_RegisterReturnsContextError(t *testing.T) {
 	ctx := &mockContext{err: errors.New("bad data")}
 	engine := NewMusic[testSound](ctx)
-	engine.Register(soundA, []byte("fake"))
+	require.Error(t, engine.Register(soundA, []byte("fake")))
+}
 
-	// Player was not registered, so Play is a noop.
-	engine.Play(soundA)
-	require.Empty(t, ctx.players)
+func TestMusicEngine_RegisterDuplicateReturnsError(t *testing.T) {
+	ctx := &mockContext{}
+	engine := NewMusic[testSound](ctx)
+	require.NoError(t, engine.Register(soundA, []byte("fake")))
+	require.Error(t, engine.Register(soundA, []byte("fake")))
 }
 
 func TestMusicEngine_PlayUnregisteredIsNoop(t *testing.T) {
