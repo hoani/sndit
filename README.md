@@ -37,7 +37,21 @@ Or use `go:generate`:
 
 ## Usage
 
-Implement `sndit.Context` for your audio library, then call the generated packages:
+### With Ebitengine
+
+Use the `ebitenaudio` adapter package:
+
+```go
+import (
+    "github.com/hajimehoshi/ebiten/v2/audio"
+    "github.com/hoani/sndit/ebitenaudio"
+)
+
+audioCtx := audio.NewContext(44100)
+ctx := ebitenaudio.New(audioCtx)
+```
+
+Then call the generated packages:
 
 ```go
 if err := sfx_play.Init(ctx); err != nil {
@@ -55,3 +69,7 @@ if err := mus_theme.Init(ctx); err != nil {
 mus_theme.Play(mus_theme.Title)
 mus_theme.Stop()
 ```
+
+### Other audio libraries
+
+Implement `sndit.Context` and `sndit.Player` for your audio library, then pass it to the generated `Init` functions.
