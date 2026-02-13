@@ -1,5 +1,8 @@
 # sndit
 
+[![CI](https://github.com/hoani/sndit/actions/workflows/ci.yml/badge.svg)](https://github.com/hoani/sndit/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/hoani/sndit/branch/main/graph/badge.svg)](https://codecov.io/gh/hoani/sndit)
+
 Code generation tool and engine for sound in Go games.
 
 ## Install
