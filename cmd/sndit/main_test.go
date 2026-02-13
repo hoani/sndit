@@ -18,7 +18,7 @@ func TestRun(t *testing.T) {
 	err := run([]string{"-dir", dir, "-module", "github.com/hoani/testgame"})
 	require.NoError(t, err)
 
-	data, err := os.ReadFile(filepath.Join(sfxDir, "sounds_gen.go"))
+	data, err := os.ReadFile(filepath.Join(sfxDir, "sfx_play.go"))
 	require.NoError(t, err)
 	got := string(data)
 

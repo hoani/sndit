@@ -153,7 +153,7 @@ func TestGenerate_SkipsEmptyDirectories(t *testing.T) {
 
 	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
-	genPath := filepath.Join(sfxDir, "sounds_gen.go")
+	genPath := filepath.Join(sfxDir, sfxDir+".go")
 	_, err := os.Stat(genPath)
 	require.True(t, os.IsNotExist(err), "expected no generated file for empty directory")
 }
@@ -167,7 +167,7 @@ func TestGenerate_SkipsNonMatchingDirectories(t *testing.T) {
 
 	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
-	genPath := filepath.Join(otherDir, "sounds_gen.go")
+	genPath := filepath.Join(otherDir, otherDir+".go")
 	_, err := os.Stat(genPath)
 	require.True(t, os.IsNotExist(err), "expected no generated file for non-matching directory")
 }
@@ -184,8 +184,8 @@ func TestGenerate_MultipleDirectories(t *testing.T) {
 
 	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
-	require.FileExists(t, filepath.Join(sfxDir, "sounds_gen.go"))
-	require.FileExists(t, filepath.Join(musDir, "sounds_gen.go"))
+	require.FileExists(t, filepath.Join(sfxDir, filepath.Base(sfxDir)+".go"))
+	require.FileExists(t, filepath.Join(musDir, filepath.Base(musDir)+".go"))
 }
 
 func TestGenerate_SkipsNonWavFiles(t *testing.T) {
@@ -325,7 +325,7 @@ func writeFile(t *testing.T, dir, name string) {
 
 func readGenerated(t *testing.T, dir string) string {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join(dir, "sounds_gen.go"))
+	data, err := os.ReadFile(filepath.Join(dir, filepath.Base(dir)+".go"))
 	require.NoError(t, err)
 	return string(data)
 }

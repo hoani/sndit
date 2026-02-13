@@ -117,7 +117,7 @@ func Stop() {
 }
 `))
 
-// Generate scans rootDir for sfx_* and mus_* subdirectories containing .wav
+// Generate scans rootDir for sfx* and mus* subdirectories containing .wav
 // files, and generates a sounds_gen.go file in each.
 func Generate(rootDir string, modulePath string) error {
 	entries, err := os.ReadDir(rootDir)
@@ -157,7 +157,7 @@ func Generate(rootDir string, modulePath string) error {
 			Kind:    kind,
 		}
 
-		outPath := filepath.Join(dirPath, "sounds_gen.go")
+		outPath := filepath.Join(dirPath, fmt.Sprintf("%s.go", name))
 		f, err := os.Create(outPath)
 		if err != nil {
 			return fmt.Errorf("creating %s: %w", outPath, err)
