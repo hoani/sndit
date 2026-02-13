@@ -4,21 +4,19 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerate_SfxDirectory(t *testing.T) {
 	dir := t.TempDir()
 
 	sfxDir := filepath.Join(dir, "sfx_play")
-	if err := os.Mkdir(sfxDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.Mkdir(sfxDir, 0o755))
 	writeFile(t, sfxDir, "die.wav")
 	writeFile(t, sfxDir, "move.wav")
 
-	if err := Generate(dir, "github.com/hoani/mygame"); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
 	got := readGenerated(t, sfxDir)
 
@@ -56,24 +54,18 @@ func Play(id Sound) {
 }
 `
 
-	if got != want {
-		t.Errorf("generated output mismatch.\ngot:\n%s\nwant:\n%s", got, want)
-	}
+	require.Equal(t, want, got)
 }
 
 func TestGenerate_MusDirectory(t *testing.T) {
 	dir := t.TempDir()
 
 	musDir := filepath.Join(dir, "mus_theme")
-	if err := os.Mkdir(musDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.Mkdir(musDir, 0o755))
 	writeFile(t, musDir, "title.wav")
 	writeFile(t, musDir, "gameplay.wav")
 
-	if err := Generate(dir, "github.com/hoani/mygame"); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
 	got := readGenerated(t, musDir)
 
@@ -115,46 +107,34 @@ func Stop() {
 }
 `
 
-	if got != want {
-		t.Errorf("generated output mismatch.\ngot:\n%s\nwant:\n%s", got, want)
-	}
+	require.Equal(t, want, got)
 }
 
 func TestGenerate_SkipsEmptyDirectories(t *testing.T) {
 	dir := t.TempDir()
 
 	sfxDir := filepath.Join(dir, "sfx_empty")
-	if err := os.Mkdir(sfxDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.Mkdir(sfxDir, 0o755))
 
-	if err := Generate(dir, "github.com/hoani/mygame"); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
 	genPath := filepath.Join(sfxDir, "sounds_gen.go")
-	if _, err := os.Stat(genPath); !os.IsNotExist(err) {
-		t.Error("expected no generated file for empty directory")
-	}
+	_, err := os.Stat(genPath)
+	require.True(t, os.IsNotExist(err), "expected no generated file for empty directory")
 }
 
 func TestGenerate_SkipsNonMatchingDirectories(t *testing.T) {
 	dir := t.TempDir()
 
 	otherDir := filepath.Join(dir, "other")
-	if err := os.Mkdir(otherDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.Mkdir(otherDir, 0o755))
 	writeFile(t, otherDir, "sound.wav")
 
-	if err := Generate(dir, "github.com/hoani/mygame"); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
 	genPath := filepath.Join(otherDir, "sounds_gen.go")
-	if _, err := os.Stat(genPath); !os.IsNotExist(err) {
-		t.Error("expected no generated file for non-matching directory")
-	}
+	_, err := os.Stat(genPath)
+	require.True(t, os.IsNotExist(err), "expected no generated file for non-matching directory")
 }
 
 func TestGenerate_MultipleDirectories(t *testing.T) {
@@ -162,41 +142,26 @@ func TestGenerate_MultipleDirectories(t *testing.T) {
 
 	sfxDir := filepath.Join(dir, "sfx_play")
 	musDir := filepath.Join(dir, "mus_bg")
-	if err := os.Mkdir(sfxDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Mkdir(musDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.Mkdir(sfxDir, 0o755))
+	require.NoError(t, os.Mkdir(musDir, 0o755))
 	writeFile(t, sfxDir, "click.wav")
 	writeFile(t, musDir, "loop.wav")
 
-	if err := Generate(dir, "github.com/hoani/mygame"); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
-	// Both should have generated files.
-	if _, err := os.Stat(filepath.Join(sfxDir, "sounds_gen.go")); err != nil {
-		t.Error("expected generated file in sfx_play")
-	}
-	if _, err := os.Stat(filepath.Join(musDir, "sounds_gen.go")); err != nil {
-		t.Error("expected generated file in mus_bg")
-	}
+	require.FileExists(t, filepath.Join(sfxDir, "sounds_gen.go"))
+	require.FileExists(t, filepath.Join(musDir, "sounds_gen.go"))
 }
 
 func TestGenerate_SkipsNonWavFiles(t *testing.T) {
 	dir := t.TempDir()
 
 	sfxDir := filepath.Join(dir, "sfx_play")
-	if err := os.Mkdir(sfxDir, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.Mkdir(sfxDir, 0o755))
 	writeFile(t, sfxDir, "click.wav")
 	writeFile(t, sfxDir, "readme.txt")
 
-	if err := Generate(dir, "github.com/hoani/mygame"); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
 
 	got := readGenerated(t, sfxDir)
 
@@ -230,23 +195,80 @@ func Play(id Sound) {
 }
 `
 
-	if got != want {
-		t.Errorf("generated output mismatch.\ngot:\n%s\nwant:\n%s", got, want)
-	}
+	require.Equal(t, want, got)
+}
+
+func TestGenerate_InvalidRootDir(t *testing.T) {
+	err := Generate("/nonexistent/path", "github.com/hoani/mygame")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "reading root dir")
+}
+
+func TestGenerate_SkipsFilesInRoot(t *testing.T) {
+	dir := t.TempDir()
+
+	// A file (not directory) in root should be skipped.
+	writeFile(t, dir, "stray.wav")
+
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
+}
+
+func TestGenerate_SkipsSubdirectoriesInSoundDir(t *testing.T) {
+	dir := t.TempDir()
+
+	sfxDir := filepath.Join(dir, "sfx_play")
+	require.NoError(t, os.Mkdir(sfxDir, 0o755))
+	writeFile(t, sfxDir, "click.wav")
+	// Subdirectory inside sfx_play should be ignored by collectWavFiles.
+	require.NoError(t, os.Mkdir(filepath.Join(sfxDir, "nested"), 0o755))
+
+	require.NoError(t, Generate(dir, "github.com/hoani/mygame"))
+	got := readGenerated(t, sfxDir)
+	require.Contains(t, got, "Click Sound = iota")
+	require.NotContains(t, got, "nested")
+}
+
+func TestGenerate_UnreadableSoundDir(t *testing.T) {
+	dir := t.TempDir()
+
+	sfxDir := filepath.Join(dir, "sfx_broken")
+	require.NoError(t, os.Mkdir(sfxDir, 0o755))
+	writeFile(t, sfxDir, "click.wav")
+	// Make the directory unreadable after creating files.
+	require.NoError(t, os.Chmod(sfxDir, 0o000))
+	t.Cleanup(func() { os.Chmod(sfxDir, 0o755) })
+
+	err := Generate(dir, "github.com/hoani/mygame")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "scanning")
+}
+
+func TestGenerate_ReadOnlyOutputDir(t *testing.T) {
+	dir := t.TempDir()
+
+	sfxDir := filepath.Join(dir, "sfx_play")
+	require.NoError(t, os.Mkdir(sfxDir, 0o555))
+	t.Cleanup(func() { os.Chmod(sfxDir, 0o755) })
+
+	writeFile(t, dir, "sfx_play_placeholder") // ensure dir entry exists
+	// We need a .wav file to trigger generation; write it before chmod.
+	os.Chmod(sfxDir, 0o755)
+	writeFile(t, sfxDir, "click.wav")
+	os.Chmod(sfxDir, 0o555)
+
+	err := Generate(dir, "github.com/hoani/mygame")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "creating")
 }
 
 func writeFile(t *testing.T, dir, name string) {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(dir, name), []byte("fake"), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte("fake"), 0o644))
 }
 
 func readGenerated(t *testing.T, dir string) string {
 	t.Helper()
 	data, err := os.ReadFile(filepath.Join(dir, "sounds_gen.go"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return string(data)
 }

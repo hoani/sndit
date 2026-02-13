@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"errors"
 	"fmt"
 	"os"
 
@@ -9,17 +9,36 @@ import (
 )
 
 func main() {
-	dir := flag.String("dir", ".", "root directory to scan for sound directories")
-	module := flag.String("module", "", "Go module path for generated imports")
-	flag.Parse()
-
-	if *module == "" {
-		fmt.Fprintln(os.Stderr, "error: -module flag is required")
-		os.Exit(1)
-	}
-
-	if err := generate.Generate(*dir, *module); err != nil {
+	if err := run(os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func run(args []string) error {
+	dir := "."
+	module := ""
+
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "-dir":
+			i++
+			if i >= len(args) {
+				return errors.New("-dir requires a value")
+			}
+			dir = args[i]
+		case "-module":
+			i++
+			if i >= len(args) {
+				return errors.New("-module requires a value")
+			}
+			module = args[i]
+		}
+	}
+
+	if module == "" {
+		return errors.New("-module flag is required")
+	}
+
+	return generate.Generate(dir, module)
 }

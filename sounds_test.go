@@ -1,29 +1,37 @@
 package sndit
 
-import "testing"
+import (
+	"errors"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 type mockPlayer struct {
-	playing  bool
-	rewound  bool
-	paused   bool
-	volume   float64
-	playN    int
-	pauseN   int
-	rewindN  int
+	playing bool
+	rewound bool
+	paused  bool
+	volume  float64
+	playN   int
+	pauseN  int
+	rewindN int
 }
 
-func (m *mockPlayer) Play()              { m.playing = true; m.playN++ }
-func (m *mockPlayer) Pause()             { m.playing = false; m.paused = true; m.pauseN++ }
-func (m *mockPlayer) Rewind() error      { m.rewound = true; m.rewindN++; return nil }
-func (m *mockPlayer) IsPlaying() bool    { return m.playing }
+func (m *mockPlayer) Play()               { m.playing = true; m.playN++ }
+func (m *mockPlayer) Pause()              { m.playing = false; m.paused = true; m.pauseN++ }
+func (m *mockPlayer) Rewind() error       { m.rewound = true; m.rewindN++; return nil }
+func (m *mockPlayer) IsPlaying() bool     { return m.playing }
 func (m *mockPlayer) SetVolume(v float64) { m.volume = v }
 
 type mockContext struct {
 	players []*mockPlayer
-	idx     int
+	err     error
 }
 
 func (m *mockContext) NewPlayer(data []byte) (Player, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
 	p := &mockPlayer{}
 	m.players = append(m.players, p)
 	return p, nil
@@ -49,12 +57,8 @@ func TestSfxEngine_Play(t *testing.T) {
 	engine.Play(soundA)
 
 	pa := ctx.players[0]
-	if !pa.playing {
-		t.Error("expected soundA to be playing")
-	}
-	if pa.playN != 1 {
-		t.Errorf("expected 1 play call, got %d", pa.playN)
-	}
+	require.True(t, pa.playing, "expected soundA to be playing")
+	require.Equal(t, 1, pa.playN)
 }
 
 func TestSfxEngine_PlayRestartsWhilePlaying(t *testing.T) {
@@ -66,15 +70,9 @@ func TestSfxEngine_PlayRestartsWhilePlaying(t *testing.T) {
 	engine.Play(soundA) // should restart
 
 	pa := ctx.players[0]
-	if pa.pauseN != 1 {
-		t.Errorf("expected 1 pause call, got %d", pa.pauseN)
-	}
-	if pa.rewindN != 2 {
-		t.Errorf("expected 2 rewind calls, got %d", pa.rewindN)
-	}
-	if pa.playN != 2 {
-		t.Errorf("expected 2 play calls, got %d", pa.playN)
-	}
+	require.Equal(t, 1, pa.pauseN)
+	require.Equal(t, 2, pa.rewindN)
+	require.Equal(t, 2, pa.playN)
 }
 
 func TestSfxEngine_PlayUnregisteredIsNoop(t *testing.T) {
@@ -93,9 +91,7 @@ func TestMusicEngine_Play(t *testing.T) {
 	engine.Play(soundA)
 
 	pa := ctx.players[0]
-	if !pa.playing {
-		t.Error("expected soundA to be playing")
-	}
+	require.True(t, pa.playing, "expected soundA to be playing")
 }
 
 func TestMusicEngine_PlaySwitchesTracks(t *testing.T) {
@@ -109,13 +105,8 @@ func TestMusicEngine_PlaySwitchesTracks(t *testing.T) {
 
 	pa := ctx.players[0]
 	pb := ctx.players[1]
-
-	if pa.playing {
-		t.Error("expected soundA to be stopped")
-	}
-	if !pb.playing {
-		t.Error("expected soundB to be playing")
-	}
+	require.False(t, pa.playing, "expected soundA to be stopped")
+	require.True(t, pb.playing, "expected soundB to be playing")
 }
 
 func TestMusicEngine_PlaySameTrackIsNoop(t *testing.T) {
@@ -127,9 +118,7 @@ func TestMusicEngine_PlaySameTrackIsNoop(t *testing.T) {
 	engine.Play(soundA) // should not restart
 
 	pa := ctx.players[0]
-	if pa.playN != 1 {
-		t.Errorf("expected 1 play call, got %d", pa.playN)
-	}
+	require.Equal(t, 1, pa.playN)
 }
 
 func TestMusicEngine_Stop(t *testing.T) {
@@ -141,12 +130,8 @@ func TestMusicEngine_Stop(t *testing.T) {
 	engine.Stop()
 
 	pa := ctx.players[0]
-	if pa.playing {
-		t.Error("expected soundA to be stopped")
-	}
-	if pa.rewindN != 2 { // 1 from Play + 1 from Stop
-		t.Errorf("expected 2 rewind calls, got %d", pa.rewindN)
-	}
+	require.False(t, pa.playing, "expected soundA to be stopped")
+	require.Equal(t, 2, pa.rewindN) // 1 from Play + 1 from Stop
 }
 
 func TestMusicEngine_StopWhenNotPlayingIsNoop(t *testing.T) {
@@ -155,4 +140,32 @@ func TestMusicEngine_StopWhenNotPlayingIsNoop(t *testing.T) {
 
 	// Should not panic.
 	engine.Stop()
+}
+
+func TestSfxEngine_RegisterError(t *testing.T) {
+	ctx := &mockContext{err: errors.New("bad data")}
+	engine := NewSfx[testSound](ctx)
+	engine.Register(soundA, []byte("fake"))
+
+	// Player was not registered, so Play is a noop.
+	engine.Play(soundA)
+	require.Empty(t, ctx.players)
+}
+
+func TestMusicEngine_RegisterError(t *testing.T) {
+	ctx := &mockContext{err: errors.New("bad data")}
+	engine := NewMusic[testSound](ctx)
+	engine.Register(soundA, []byte("fake"))
+
+	// Player was not registered, so Play is a noop.
+	engine.Play(soundA)
+	require.Empty(t, ctx.players)
+}
+
+func TestMusicEngine_PlayUnregisteredIsNoop(t *testing.T) {
+	ctx := &mockContext{}
+	engine := NewMusic[testSound](ctx)
+
+	// Should not panic.
+	engine.Play(soundA)
 }
