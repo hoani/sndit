@@ -133,9 +133,9 @@ func Generate(rootDir string, modulePath string) error {
 		name := entry.Name()
 		var kind dirKind
 		switch {
-		case strings.HasPrefix(name, "sfx_"):
+		case strings.HasPrefix(name, "sfx"):
 			kind = kindSfx
-		case strings.HasPrefix(name, "mus_"):
+		case strings.HasPrefix(name, "mus"):
 			kind = kindMusic
 		default:
 			continue
