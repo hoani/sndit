@@ -1,4 +1,4 @@
-package ebitenaudio
+package sndebiten
 
 import (
 	"bytes"
@@ -23,11 +23,11 @@ func New(ctx *audio.Context) *Context {
 func (c *Context) NewPlayer(data []byte) (sndit.Player, error) {
 	stream, err := wav.DecodeF32(bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("ebitenaudio: decode wav: %w", err)
+		return nil, fmt.Errorf("sndebiten: decode wav: %w", err)
 	}
 	p, err := c.ctx.NewPlayerF32(stream)
 	if err != nil {
-		return nil, fmt.Errorf("ebitenaudio: new player: %w", err)
+		return nil, fmt.Errorf("sndebiten: new player: %w", err)
 	}
 	return p, nil
 }
@@ -36,12 +36,12 @@ func (c *Context) NewPlayer(data []byte) (sndit.Player, error) {
 func (c *Context) NewLoopPlayer(data []byte) (sndit.Player, error) {
 	stream, err := wav.DecodeF32(bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("ebitenaudio: decode wav: %w", err)
+		return nil, fmt.Errorf("sndebiten: decode wav: %w", err)
 	}
 	loop := audio.NewInfiniteLoopF32(stream, stream.Length())
 	p, err := c.ctx.NewPlayerF32(loop)
 	if err != nil {
-		return nil, fmt.Errorf("ebitenaudio: new player: %w", err)
+		return nil, fmt.Errorf("sndebiten: new player: %w", err)
 	}
 	return p, nil
 }

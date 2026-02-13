@@ -1,4 +1,4 @@
-package ebitenaudio
+package sndebiten
 
 import "github.com/hoani/sndit"
 

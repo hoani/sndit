@@ -42,16 +42,16 @@ Or use `go:generate`:
 
 ### With Ebitengine
 
-Use the `ebitenaudio` adapter package:
+Use the `sndebiten` adapter package:
 
 ```go
 import (
     "github.com/hajimehoshi/ebiten/v2/audio"
-    "github.com/hoani/sndit/ebitenaudio"
+    "github.com/hoani/sndit/sndebiten"
 )
 
 audioCtx := audio.NewContext(44100)
-ctx := ebitenaudio.New(audioCtx)
+ctx := sndebiten.New(audioCtx)
 ```
 
 Then call the generated packages:
