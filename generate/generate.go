@@ -171,10 +171,12 @@ func Generate(rootDir string, modulePath string) error {
 		}
 
 		if err := tmpl.Execute(f, data); err != nil {
-			f.Close()
+			_ = f.Close()
 			return fmt.Errorf("executing template for %s: %w", name, err)
 		}
-		f.Close()
+		if err := f.Close(); err != nil {
+			return fmt.Errorf("closing file for %s: %w", name, err)
+		}
 	}
 
 	return nil

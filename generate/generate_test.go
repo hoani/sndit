@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/require"
 )
@@ -255,7 +256,7 @@ func TestGenerate_UnreadableSoundDir(t *testing.T) {
 	writeFile(t, sfxDir, "click.wav")
 	// Make the directory unreadable after creating files.
 	require.NoError(t, os.Chmod(sfxDir, 0o000))
-	t.Cleanup(func() { os.Chmod(sfxDir, 0o755) })
+	t.Cleanup(func() { _ = os.Chmod(sfxDir, 0o755) })
 
 	err := Generate(dir, "github.com/hoani/mygame")
 	require.Error(t, err)
@@ -267,17 +268,34 @@ func TestGenerate_ReadOnlyOutputDir(t *testing.T) {
 
 	sfxDir := filepath.Join(dir, "sfx_play")
 	require.NoError(t, os.Mkdir(sfxDir, 0o555))
-	t.Cleanup(func() { os.Chmod(sfxDir, 0o755) })
+	t.Cleanup(func() { _ = os.Chmod(sfxDir, 0o755) })
 
 	writeFile(t, dir, "sfx_play_placeholder") // ensure dir entry exists
 	// We need a .wav file to trigger generation; write it before chmod.
-	os.Chmod(sfxDir, 0o755)
+	require.NoError(t, os.Chmod(sfxDir, 0o755))
 	writeFile(t, sfxDir, "click.wav")
-	os.Chmod(sfxDir, 0o555)
+	require.NoError(t, os.Chmod(sfxDir, 0o555))
 
 	err := Generate(dir, "github.com/hoani/mygame")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "creating")
+}
+
+func TestGenerate_TemplateExecuteError(t *testing.T) {
+	dir := t.TempDir()
+
+	sfxDir := filepath.Join(dir, "sfx_play")
+	require.NoError(t, os.Mkdir(sfxDir, 0o755))
+	writeFile(t, sfxDir, "click.wav")
+
+	// Swap the sfx template with one that will fail during execution.
+	orig := sfxTemplate
+	sfxTemplate = template.Must(template.New("bad").Option("missingkey=error").Parse("{{.NoSuchField}}"))
+	t.Cleanup(func() { sfxTemplate = orig })
+
+	err := Generate(dir, "github.com/hoani/mygame")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "executing template")
 }
 
 func writeFile(t *testing.T, dir, name string) {

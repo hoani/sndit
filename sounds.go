@@ -53,7 +53,7 @@ func (e *SfxEngine[S]) Play(id S) {
 	if p.IsPlaying() {
 		p.Pause()
 	}
-	p.Rewind()
+	_ = p.Rewind()
 	p.Play()
 }
 
@@ -97,7 +97,7 @@ func (e *MusicEngine[S]) Play(id S) {
 	if !ok {
 		return
 	}
-	p.Rewind()
+	_ = p.Rewind()
 	p.Play()
 	e.current = id
 	e.playing = true
@@ -114,7 +114,7 @@ func (e *MusicEngine[S]) stopCurrent() {
 	}
 	if p, ok := e.players[e.current]; ok {
 		p.Pause()
-		p.Rewind()
+		_ = p.Rewind()
 	}
 	e.playing = false
 }
